@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة تفادي المكعبات</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+            touch-action: manipulation;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+            background: #000;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">النقاط: 0</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("ui");
+
+        // ضبط حجم الكانفس ليناسب الشاشة
+        canvas.width = window.innerWidth > 500 ? 400 : window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gameOver = false;
+        let gameSpeed = 3;
+
+        const player = {
+            x: canvas.width / 2 - 20,
+            y: canvas.height - 80,
+            size: 40,
+            color: "#00ff88"
+        };
+
+        const obstacles = [];
+
+        function createObstacle() {
+            const size = Math.random() * 40 + 20;
+            obstacles.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                size: size,
+                speed: Math.random() * 2 + gameSpeed,
+                color: "#ff4444"
+            });
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // رسم اللاعب
+            ctx.fillStyle = player.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = player.color;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            ctx.shadowBlur = 0;
+
+            // تحديث العوائق
+            if (Math.random() < 0.03) createObstacle();
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let o = obstacles[i];
+                o.y += o.speed;
+
+                ctx.fillStyle = o.color;
+                ctx.fillRect(o.x, o.y, o.size, o.size);
+
+                // تصادم
+                if (player.x < o.x + o.size &&
+                    player.x + player.size > o.x &&
+                    player.y < o.y + o.size &&
+                    player.y + player.size > o.y) {
+                    gameOver = true;
+                    alert("انتهت اللعبة! نقاطك: " + score);
+                    location.reload();
+                }
+
+                // حذف العوائق خارج الشاشة وزيادة النقاط
+                if (o.y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    scoreElement.innerText = "النقاط: " + score;
+                    if (score % 10 === 0) gameSpeed += 0.2; // زيادة الصعوبة
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // تحكم الموبايل (لمس)
+        window.addEventListener("touchstart", (e) => {
+            const touchX = e.touches[0].clientX;
+            if (touchX < window.innerWidth / 2) {
+                if (player.x > 0) player.x -= 40;
+            } else {
+                if (player.x < canvas.width - player.size) player.x += 40;
+            }
+        });
+
+        // تحكم الكيبورد
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft" && player.x > 0) player.x -= 30;
+            if (e.key === "ArrowRight" && player.x < canvas.width - player.size) player.x += 30;
+        });
+
+        update();
+    </script>
+</body>
+</html>
