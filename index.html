@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة المربعات الممتعة</title>
+    <style>
+        body { margin: 0; background: #333; text-align: center; color: white; font-family: sans-serif; overflow: hidden; }
+        #score { font-size: 20px; padding: 10px; }
+        canvas { background: #87CEEB; display: block; margin: 0 auto; width: 100vw; height: 80vh; touch-action: none; cursor: crosshair; }
+        .controls { padding: 10px; }
+        button { padding: 10px 15px; font-size: 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="score">النقاط: 0</div>
+    <canvas id="gameCanvas" width="360" height="480"></canvas>
+    <div class="controls">
+        <button onclick="playerChar='🐰'">أرنب</button>
+        <button onclick="playerChar='🐱'">قطة</button>
+        <button onclick="playerChar='🦊'">ثعلب</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let playerChar = '🐰', x = 150, y = 400, score = 0, gameOver = false;
+        let food = { x: 150, y: -50 };
+        let rock = { x: 200, y: -200 };
+
+        function update() {
+            if (gameOver) {
+                ctx.fillStyle = "black";
+                ctx.font = "30px Arial";
+                ctx.fillText("خسرت! النتيجة: " + score, 60, 240);
+                ctx.fillText("اضغط لتحديث الصفحة", 50, 280);
+                return;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "40px Arial";
+            ctx.fillText(playerChar, x, y);
+            
+            // التفاح
+            ctx.fillText("🍎", food.x, food.y);
+            food.y += 5; // سرعة التفاح
+            if (food.y > 480) { food.y = -50; food.x = Math.random() * 300; }
+
+            // العقبات (الصخور)
+            ctx.fillText("🪨", rock.x, rock.y);
+            rock.y += 6; // سرعة الصخور
+            if (rock.y > 480) { rock.y = -200; rock.x = Math.random() * 300; }
+
+            // جمع التفاح
+            if (Math.abs(food.y - y) < 40 && Math.abs(food.x - x) < 40) {
+                score++;
+                document.getElementById("score").innerText = "النقاط: " + score;
+                food.y = -50; food.x = Math.random() * 300;
+            }
+
+            // الاصطدام بالصخرة
+            if (Math.abs(rock.y - y) < 40 && Math.abs(rock.x - x) < 40) gameOver = true;
+
+            requestAnimationFrame(update);
+        }
+
+        window.addEventListener("touchmove", (e) => {
+            let rect = canvas.getBoundingClientRect();
+            x = (e.touches[0].clientX - rect.left) / (rect.width / canvas.width) - 20;
+        });
+        
+        update();
+    </script>
+</body>
+</html>
